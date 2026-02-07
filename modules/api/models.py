@@ -318,6 +318,7 @@ class ScriptArg(BaseModel):
     maximum: Optional[Any] = Field(default=None, title="Minimum", description="Maximum allowed value for the argumentin UI")
     step: Optional[Any] = Field(default=None, title="Minimum", description="Step for changing value of the argumentin UI")
     choices: Optional[list[str]] = Field(default=None, title="Choices", description="Possible values for the argument")
+    input_field_name: Optional[str] = Field(default=None, title="InputFieldName", description="Field name for input_fields dictionary in API")
 
 
 class ScriptInfo(BaseModel):

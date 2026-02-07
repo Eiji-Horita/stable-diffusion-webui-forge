@@ -335,6 +335,7 @@ class Api:
         return script_args
 
     def init_script_args(self, request, default_script_args, selectable_scripts, selectable_idx, script_runner, *, input_script_args=None):
+        print("Initializing script args")
         script_args = default_script_args.copy()
 
         if input_script_args is not None:
@@ -360,6 +361,16 @@ class Api:
                     # min between arg length in scriptrunner and arg length in the request
                     for idx in range(0, min((alwayson_script.args_to - alwayson_script.args_from), len(request.alwayson_scripts[alwayson_script_name]["args"]))):
                         script_args[alwayson_script.args_from + idx] = request.alwayson_scripts[alwayson_script_name]["args"][idx]
+                
+                # Support input_fields dictionary format
+                if "input_fields" in request.alwayson_scripts[alwayson_script_name]:
+                    print("Using input_fields for always on script:", alwayson_script_name)
+                    input_fields = request.alwayson_scripts[alwayson_script_name]["input_fields"]
+                    if alwayson_script.api_info is not None and alwayson_script.api_info.args:
+                        for arg_index, arg_info in enumerate(alwayson_script.api_info.args):
+                            field_name = arg_info.input_field_name or (arg_info.label.lower().replace(" ", "_") if arg_info.label else None)
+                            if field_name and field_name in input_fields:
+                                script_args[alwayson_script.args_from + arg_index] = input_fields[field_name]
         return script_args
 
     def apply_infotext(self, request, tabname, *, script_runner=None, mentioned_script_args=None):

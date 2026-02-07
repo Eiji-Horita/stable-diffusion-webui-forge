@@ -85,6 +85,9 @@ class Script:
     api_info = None
     """Generated value of type modules.api.models.ScriptInfo with information about the script for API"""
 
+    input_field_names = None
+    """List of input field names for the api input_fields parameter. Should match the order of UI components."""
+
     on_before_component_elem_id = None
     """list of callbacks to be called before a component with an elem_id is created"""
 
@@ -664,7 +667,7 @@ class ScriptRunner:
 
         api_args = []
 
-        for control in controls:
+        for idx, control in enumerate(controls):
             control.custom_script_source = os.path.basename(script.filename)
 
             arg_info = api_models.ScriptArg(label=control.label or "")
@@ -677,6 +680,10 @@ class ScriptRunner:
             choices = getattr(control, 'choices', None)  # as of gradio 3.41, some items in choices are strings, and some are tuples where the first elem is the string
             if choices is not None:
                 arg_info.choices = [x[0] if isinstance(x, tuple) else x for x in choices]
+
+            # Set input_field_name from the script's input_field_names list if available
+            if script.input_field_names and idx < len(script.input_field_names):
+                arg_info.input_field_name = script.input_field_names[idx]
 
             api_args.append(arg_info)
 

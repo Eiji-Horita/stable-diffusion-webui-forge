@@ -48,6 +48,18 @@ class KohyaHRFixForForge(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
+    # Define input field names for API input_fields parameter
+    input_field_names = [
+        "enabled",
+        "block_number",
+        "downscale_factor",
+        "start_percent",
+        "end_percent",
+        "downscale_after_skip",
+        "downscale_method",
+        "upscale_method",
+    ]
+
     def ui(self, *args, **kwargs):
         upscale_methods = ["bicubic", "nearest-exact", "bilinear", "area", "bislerp"]
         with InputAccordion(False, label=self.title()) as enabled:
