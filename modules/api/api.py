@@ -335,7 +335,6 @@ class Api:
         return script_args
 
     def init_script_args(self, request, default_script_args, selectable_scripts, selectable_idx, script_runner, *, input_script_args=None):
-        print("Initializing script args")
         script_args = default_script_args.copy()
 
         if input_script_args is not None:
