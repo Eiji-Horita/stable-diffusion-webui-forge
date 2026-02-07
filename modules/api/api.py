@@ -362,15 +362,13 @@ class Api:
                     for idx in range(0, min((alwayson_script.args_to - alwayson_script.args_from), len(request.alwayson_scripts[alwayson_script_name]["args"]))):
                         script_args[alwayson_script.args_from + idx] = request.alwayson_scripts[alwayson_script_name]["args"][idx]
                 
-                # Support input_fields dictionary format
-                if "input_fields" in request.alwayson_scripts[alwayson_script_name]:
-                    print("Using input_fields for always on script:", alwayson_script_name)
-                    input_fields = request.alwayson_scripts[alwayson_script_name]["input_fields"]
-                    if alwayson_script.api_info is not None and alwayson_script.api_info.args:
-                        for arg_index, arg_info in enumerate(alwayson_script.api_info.args):
-                            field_name = arg_info.input_field_name or (arg_info.label.lower().replace(" ", "_") if arg_info.label else None)
-                            if field_name and field_name in input_fields:
-                                script_args[alwayson_script.args_from + arg_index] = input_fields[field_name]
+                # Support flattened input fields (no hierarchy): keys directly in the alwayson script dict
+                input_fields = request.alwayson_scripts[alwayson_script_name]
+                if alwayson_script.api_info is not None and alwayson_script.api_info.args:
+                    for arg_index, arg_info in enumerate(alwayson_script.api_info.args):
+                        field_name = arg_info.input_field_name or (arg_info.label.lower().replace(" ", "_") if arg_info.label else None)
+                        if field_name and field_name in input_fields:
+                            script_args[alwayson_script.args_from + arg_index] = input_fields[field_name]
         return script_args
 
     def apply_infotext(self, request, tabname, *, script_runner=None, mentioned_script_args=None):
