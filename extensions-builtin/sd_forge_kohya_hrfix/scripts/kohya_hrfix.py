@@ -62,7 +62,7 @@ class KohyaHRFixForForge(scripts.Script):
 
     def ui(self, *args, **kwargs):
         upscale_methods = ["bicubic", "nearest-exact", "bilinear", "area", "bislerp"]
-        with InputAccordion(False, label=self.title()) as enabled:
+        with InputAccordion(True, label=self.title()) as enabled:
             with gr.Row():
                 block_number = gr.Slider(label='Block Number', value=3, minimum=1, maximum=32, step=1)
                 downscale_factor = gr.Slider(label='Downscale Factor', value=2.0, minimum=0.1, maximum=9.0, step=0.001)
