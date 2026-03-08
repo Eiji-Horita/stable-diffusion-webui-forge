@@ -5,10 +5,14 @@ import time
 import psutil
 import torch
 import platform
+import logging
 
 from enum import Enum
 from backend import stream, utils
 from backend.args import args
+
+
+logger = logging.getLogger(__name__)
 
 
 cpu = torch.device('cpu')
@@ -132,7 +136,7 @@ def get_total_memory(dev=None, torch_total_too=False):
 
 total_vram = get_total_memory(get_torch_device()) / (1024 * 1024)
 total_ram = psutil.virtual_memory().total / (1024 * 1024)
-print("Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(total_vram, total_ram))
+logger.debug("Total VRAM {:0.0f} MB, total RAM {:0.0f} MB".format(total_vram, total_ram))
 
 try:
     print("pytorch version: {}".format(torch.version.__version__))
@@ -472,7 +476,7 @@ class LoadedModel:
             raise e
 
         if do_not_need_cpu_swap:
-            print('All loaded to GPU.')
+            logger.debug('All loaded to GPU.')
         else:
             gpu_modules, gpu_modules_only_extras, cpu_modules = build_module_profile(self.real_model, model_gpu_memory_when_using_cpu_swap)
             pin_memory = PIN_SHARED_MEMORY and is_device_cpu(self.model.offload_device)
@@ -567,23 +571,23 @@ def free_memory(memory_required, device, keep_loaded=[], free_all=False):
 
     if free_all:
         memory_required = 1e30
-        print(f"[Unload] Trying to free all memory for {device} with {len(keep_loaded)} models keep loaded ... ", end="")
+        logger.debug(f"[Unload] Trying to free all memory for {device} with {len(keep_loaded)} models keep loaded ... ", end="")
     else:
-        print(f"[Unload] Trying to free {memory_required / (1024 * 1024):.2f} MB for {device} with {len(keep_loaded)} models keep loaded ... ", end="")
+        logger.debug(f"[Unload] Trying to free {memory_required / (1024 * 1024):.2f} MB for {device} with {len(keep_loaded)} models keep loaded ... ", end="")
 
     offload_everything = ALWAYS_VRAM_OFFLOAD or vram_state == VRAMState.NO_VRAM
     unloaded_model = False
     for i in range(len(current_loaded_models) - 1, -1, -1):
         if not offload_everything:
             free_memory = get_free_memory(device)
-            print(f"Current free memory is {free_memory / (1024 * 1024):.2f} MB ... ", end="")
+            logger.debug(f"Current free memory is {free_memory / (1024 * 1024):.2f} MB ... ", end="")
             if free_memory > memory_required:
                 break
         shift_model = current_loaded_models[i]
         if shift_model.device == device:
             if shift_model not in keep_loaded:
                 m = current_loaded_models.pop(i)
-                print(f"Unload model {m.model.model.__class__.__name__} ", end="")
+                logger.debug(f"Unload model {m.model.model.__class__.__name__} ", end="")
                 m.model_unload()
                 del m
                 unloaded_model = True
@@ -596,7 +600,7 @@ def free_memory(memory_required, device, keep_loaded=[], free_all=False):
             if mem_free_torch > mem_free_total * 0.25:
                 soft_empty_cache()
 
-    print('Done.')
+    logger.debug('Done.')
     return
 
 
@@ -638,7 +642,7 @@ def load_models_gpu(models, memory_required=0, hard_memory_preservation=0):
 
         moving_time = time.perf_counter() - execution_start_time
         if moving_time > 0.1:
-            print(f'Memory cleanup has taken {moving_time:.2f} seconds')
+            logger.debug(f'Memory cleanup has taken {moving_time:.2f} seconds')
 
         return
 
@@ -670,7 +674,7 @@ def load_models_gpu(models, memory_required=0, hard_memory_preservation=0):
             current_free_mem = get_free_memory(torch_dev)
             estimated_remaining_memory = current_free_mem - model_require - memory_for_inference
 
-            print(f"[Memory Management] Target: {loaded_model.model.model.__class__.__name__}, Free GPU: {current_free_mem / (1024 * 1024):.2f} MB, Model Require: {model_require / (1024 * 1024):.2f} MB, Previously Loaded: {previously_loaded / (1024 * 1024):.2f} MB, Inference Require: {memory_for_inference / (1024 * 1024):.2f} MB, Remaining: {estimated_remaining_memory / (1024 * 1024):.2f} MB, ", end="")
+            logger.debug(f"[Memory Management] Target: {loaded_model.model.model.__class__.__name__}, Free GPU: {current_free_mem / (1024 * 1024):.2f} MB, Model Require: {model_require / (1024 * 1024):.2f} MB, Previously Loaded: {previously_loaded / (1024 * 1024):.2f} MB, Inference Require: {memory_for_inference / (1024 * 1024):.2f} MB, Remaining: {estimated_remaining_memory / (1024 * 1024):.2f} MB, ", end="")
 
             if estimated_remaining_memory < 0:
                 vram_set_state = VRAMState.LOW_VRAM
@@ -685,7 +689,7 @@ def load_models_gpu(models, memory_required=0, hard_memory_preservation=0):
         current_loaded_models.insert(0, loaded_model)
 
     moving_time = time.perf_counter() - execution_start_time
-    print(f'Moving model(s) has taken {moving_time:.2f} seconds')
+    logger.debug(f'Moving model(s) has taken {moving_time:.2f} seconds')
 
     return
 

@@ -23,6 +23,8 @@ from modules_forge.config import always_disabled_extensions
 
 
 args, _ = cmd_args.parser.parse_known_args()
+if getattr(args, 'v', False):
+    args.loglevel = "DEBUG"
 logging_config.setup_logging(args.loglevel)
 
 python = sys.executable

@@ -5,11 +5,14 @@ import re
 import torch
 import network
 import functools
+import logging
 
 from backend.args import dynamic_args
 from modules import shared, sd_models, errors, scripts
 from backend.utils import load_torch_file
 from backend.patcher.lora import model_lora_keys_clip, model_lora_keys_unet, load_lora
+
+logger = logging.getLogger(__name__)
 
 
 def load_lora_for_models(model, clip, lora, strength_model, strength_clip, filename='default', online_mode=False):
@@ -27,7 +30,7 @@ def load_lora_for_models(model, clip, lora, strength_model, strength_clip, filen
         return model, clip
 
     if len(lora_unmatch) > 0:
-        print(f'[LORA] Loading {filename} for {model_flag} with unmatched keys {list(lora_unmatch.keys())}')
+        logger.debug(f'[LORA] Loading {filename} for {model_flag} with unmatched keys {list(lora_unmatch.keys())}')
 
     new_model = model.clone() if model is not None else None
     new_clip = clip.clone() if clip is not None else None
@@ -38,7 +41,7 @@ def load_lora_for_models(model, clip, lora, strength_model, strength_clip, filen
         if len(skipped_keys) > 12:
             print(f'[LORA] Mismatch {filename} for {model_flag}-UNet with {len(skipped_keys)} keys mismatched in {len(loaded_keys)} keys')
         else:
-            print(f'[LORA] Loaded {filename} for {model_flag}-UNet with {len(loaded_keys)} keys at weight {strength_model} (skipped {len(skipped_keys)} keys) with on_the_fly = {online_mode}')
+            logger.debug(f'[LORA] Loaded {filename} for {model_flag}-UNet with {len(loaded_keys)} keys at weight {strength_model} (skipped {len(skipped_keys)} keys) with on_the_fly = {online_mode}')
             model = new_model
 
     if new_clip is not None and len(lora_clip) > 0:
@@ -47,7 +50,7 @@ def load_lora_for_models(model, clip, lora, strength_model, strength_clip, filen
         if len(skipped_keys) > 12:
             print(f'[LORA] Mismatch {filename} for {model_flag}-CLIP with {len(skipped_keys)} keys mismatched in {len(loaded_keys)} keys')
         else:
-            print(f'[LORA] Loaded {filename} for {model_flag}-CLIP with {len(loaded_keys)} keys at weight {strength_clip} (skipped {len(skipped_keys)} keys) with on_the_fly = {online_mode}')
+            logger.debug(f'[LORA] Loaded {filename} for {model_flag}-CLIP with {len(loaded_keys)} keys at weight {strength_clip} (skipped {len(skipped_keys)} keys) with on_the_fly = {online_mode}')
             clip = new_clip
 
     return model, clip
