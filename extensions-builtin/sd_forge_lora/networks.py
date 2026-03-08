@@ -59,8 +59,15 @@ def load_lora_state_dict(filename):
 
 
 def load_network(name, network_on_disk):
+    if network_on_disk is None:
+        raise ValueError(f"ネットワーク '{name}' が見つかりません")
+    
     net = network.Network(name, network_on_disk)
-    net.mtime = os.path.getmtime(network_on_disk.filename)
+    
+    try:
+        net.mtime = os.path.getmtime(network_on_disk.filename)
+    except (AttributeError, FileNotFoundError) as e:
+        raise ValueError(f"ファイル '{network_on_disk.filename if hasattr(network_on_disk, 'filename') else name}' にアクセスできません") from e
 
     return net
 
